@@ -1,5 +1,4 @@
 <?php
-include_once("databasecon.php");
 session_start();
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -62,15 +61,25 @@ session_start();
                                             </a>
                                             <a class="brand" href="#"><img src="img/redpointlogo.png" height="20" width="20" />&nbsp;Redpoint&trade;</a>
                                             <div class="nav-collapse collapse navbar-responsive-collapse">
-                                                <ul class="nav">
+                                                <ul id="navIz" class="nav">
                                                     <li class="active"><a  href="mapa.php" target="frame">Mapa</a></li> 
-                                                    <?php if (!isset($_SESSION['nombre'])) { ?><li><a href="#loginForm" data-toggle="modal">Inicia Sesion</a></li><?php } ?>
+                                                    <?php if (!isset($_SESSION['nombre'])) { ?><li><a href="#LoginForm" data-toggle="modal">Inicia Sesion</a></li><?php } ?>
+                                                    <li><button id="btnRuta" type="button" class="btn btn-inverse" onclick="switchRuta()">Ruta</button></li>
+                                                    <li class="divider-vertical"></li>
+                                                    <li id="btnsTransporte" style="display:none">
+                                                        <div class="btn-group">
+                                                            <button id="btnAuto" name="btnTransporte" class="btn" value="DRIVING" onclick="setTransporteAuto()"><img src="img/auto.png" width="19" height="16" alt="auto"/></button>
+                                                            <button id="btnPublico" name="btnTransporte" class="btn" value="TRANSIT" onclick="setTransportePublico()"><img src="img/publico.png" width="20" height="16" alt="Transporte publico"/></button>
+                                                            <button id="btnAPie" name="btnTransporte" class="btn" value="WALKING" onclick="setTransporteAPie()"><img src="img/apie.png" width="17" height="16" alt="A pie"/></button>
+                                                        </div>
+                                                    </li>
+
                                                 </ul>
                                                 </li>
                                                 </ul>
-                                                <form class="navbar-search pull-left" action="">
-                                                    <input type="text" class="search-query span2" placeholder="Buscar Lugar">
-                                                </form>
+                                                <div class="navbar-search pull-left">
+                                                    <input type="text" class="search-query span2 pull-left" placeholder="Buscar Lugar" onkeypress="buscarDireccion(event,this.value)">
+                                                </div>
                                                 <ul class="nav pull-right">
                                                     <li><a href="javascript:share('fb');"><img src="img/facebook_small.png" /></a></li>
                                                     <li><a href="javascript:share('tw');"><img src="img/twitter_small.png" /></a></li>
@@ -95,112 +104,118 @@ session_start();
                         <!-- Mapa de fondo por iFrame -->
                         <iframe src="mapa.php" height="100%" width="100%" style="position:absolute; top:0px; left:0px;" frameborder="0" name="frame" id="frame"></iframe>
                         <!--login form-->
-                        <div id="loginForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="loginLabel" aria-hidden="true">
+                        <div id="LoginForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="loginLabel" aria-hidden="true">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                                 <h3 id="myModalLabel">Inicio de Sesion</h3>
                             </div>
-                            <div class="alert fade in alert-error" id="loginError">
-                                <button type="button" class="close" id="loginErrorClose">&times;</button>
-                                <strong>Error!</strong>&nbsp;<span id="loginErrorText">Error de jquery</span>
+                            <div class="alert fade in alert-error" id="LoginError">
+                                <button type="button" class="close" id="LoginErrorClose">&times;</button>
+                                <strong>Error!</strong>&nbsp;<span id="LoginErrorText">Error de jquery</span>
                             </div>
-                            <div class="alert fade in alert-success" id="successLogin">
-                                <button type="button" class="close" id="successClose">&times;</button>
+                            <div class="alert fade in alert-success" id="LoginSuccess">
+                                <button type="button" class="close" id="LoginSuccessClose">&times;</button>
                                 <h4>Exito!</h4>
                                 Se ha iniciado sesion correctamente, espere mientras lo redirigimos...<br /><center><img src="img/loading.gif" /></center>
                             </div>                            <div class="modal-body">
-                                <form class="form-horizontal" action="#" id="loginFormu">
+                                <form class="form-horizontal" action="#" id="LoginFormForm">
                                     <div class="control-group">
                                         <label class="control-label" for="user">Usuario</label>
                                         <div class="controls">
-                                            <input type="text" id="user" name="user" placeholder="Usuario">
+                                            <input type="text" id="username" name="inputusername" placeholder="Usuario">
                                         </div>
                                     </div>
                                     <div class="control-group">
                                         <label class="control-label" for="pass">Contrase&ntilde;a</label>
                                         <div class="controls">
-                                            <input type="password" id="pass" name="pass" placeholder="Contrase&ntilde;a">
+                                            <input type="password" id="password" name="inputpassword" placeholder="Contrase&ntilde;a">
                                         </div>
                                     </div>
                                     <div class="control-group">
                                         <div class="controls">
-                                            <button type="button" class="btn" id="submit">Iniciar Sesion</button>
+                                            <button type="button" class="btn" id="LoginFormSubmit">Iniciar Sesion</button>
                                         </div>
                                     </div>
                                 </form>
+                                <div class="alert fade in alert-info" id="LoginLoading">
+                                    <center><strong>Espera!</strong> Estamos revisando esta  info...</center>
+                                </div>
                             </div>
                             <div class="modal-footer">
-                                &iquest;No tienes una cuenta?&nbsp;<a href="#registerForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Registrate</a><br><br>&iquest;Olvidaste tu contrase&ntilde;a?&nbsp;<a href="#recover1Form" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Recuperar tu cuenta</a>
-                                        <br><br>&iquest;Aun no has activado tu cuenta?&nbsp;<a href="#activateForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Activar tu cuenta</a>
+                                &iquest;No tienes una cuenta?&nbsp;<a href="#RegisterForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Registrate</a><br><br>&iquest;Olvidaste tu contrase&ntilde;a?&nbsp;<a href="#Forgot01Form" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Recuperar tu cuenta</a>
+                                        <br><br>&iquest;Aun no has activado tu cuenta?&nbsp;<a href="#ActivateForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Activar tu cuenta</a>
                                                 </div>
                                                 </div>
                                                 <!--register form-->
-                                                <div id="registerForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="registerLabel" aria-hidden="true">
+                                                <div id="RegisterForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="registerLabel" aria-hidden="true">
                                                     <div class="modal-header">
                                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                                                         <h3 id="myModalLabel">Registro</h3>
                                                     </div>
 
-                                                    <div class="alert fade in alert-error" id="registroError">
-                                                        <button type="button" class="close" id="registroErrorClose">&times;</button>
-                                                        <strong>Error!</strong>&nbsp;<span id="registroErrorText">Error de jquery</span>
+                                                    <div class="alert fade in alert-error" id="RegisterError">
+                                                        <button type="button" class="close" id="RegisterErrorClose">&times;</button>
+                                                        <strong>Error!</strong>&nbsp;<span id="RegisterErrorText">Error de jquery</span>
                                                     </div>
-                                                    <div class="alert fade in alert-success" id="successRegistro">
-                                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                    <div class="alert fade in alert-success" id="RegisterSuccess">
+                                                        <button type="button" class="close" id="RegisterSuccessClose">&times;</button>
                                                         <h4>Exito!</h4>
                                                         Su registro se ha completado, revise su correo para activar su cuenta!<br>
-                                                            <a href="#activateForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Activar Cuenta</a>
+                                                            <a href="#ActivateForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Activar Cuenta</a>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <form class="form-horizontal" id="registroForm" action="#">
+                                                        <form class="form-horizontal" id="RegisterFormForm" action="#">
                                                             <div class="control-group">
                                                                 <label class="control-label" for="dpi">DPI</label>
                                                                 <div class="controls">
-                                                                    <input type="text" id="dpi" name="dpi" placeholder="DPI">
+                                                                    <input type="text" id="dpi" name="inputdpi" placeholder="DPI">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <label class="control-label" for="nombre">Nombre</label>
                                                                 <div class="controls">
-                                                                    <input type="text" id="nombre" name="nombre" placeholder="Nombre">
+                                                                    <input type="text" id="nombre" name="inputnombre" placeholder="Nombre">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <label class="control-label" for="email">Correo Electronico</label>
                                                                 <div class="controls">
-                                                                    <input type="text" id="email" name="email" placeholder="Email">
+                                                                    <input type="text" id="email" name="inputemail" placeholder="Email">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <label class="control-label" for="passwd">Contrase&ntilde;a</label>
                                                                 <div class="controls">
-                                                                    <input type="password" id="passwd" name="passwd" placeholder="Contrase&ntilde;a">
+                                                                    <input type="password" id="passwordr" name="inputpasswordr" placeholder="Contrase&ntilde;a">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <label class="control-label" for="vpass">Verificar Contrase&ntilde;a</label>
                                                                 <div class="controls">
-                                                                    <input type="password" id="vpass" name="vpass" placeholder="Contrase&ntilde;a">
+                                                                    <input type="password" id="vpassword" name="inputvpassword" placeholder="Contrase&ntilde;a">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <label class="control-label" for="pais">Pais</label>
                                                                 <div class="controls">
-                                                                    <select id="pais" name="pais">
+                                                                    <select id="pais" name="selectpais">
                                                                         <option value="1">Guatemala</option>
                                                                     </select>
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <div class="controls">
-                                                                    <button type="button" class="btn" id="submitR">Registro</button>
+                                                                    <button type="button" class="btn" id="RegisterFormSubmit">Registro</button>
                                                                 </div>
                                                             </div>
                                                         </form>
+                                                        <div class="alert fade in alert-info" id="RegisterLoading">
+                                                            <center><strong>Espera!</strong> Estamos revisando esta  info...</center>
+                                                        </div>
                                                     </div>
                                                     <div class="modal-footer">
 
-                                                        &iquest;Ya tienes una cuenta?&nbsp;<a href="#loginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a>
+                                                        &iquest;Ya tienes una cuenta?&nbsp;<a href="#LoginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a>
                                                     </div>
 
 
@@ -228,120 +243,129 @@ session_start();
                                                     </div>
                                                 </div>
                                                 <!-- Activar tu cuenta -->
-                                                <div id="activateForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="activatelabel" aria-hidden="true">
+                                                <div id="ActivateForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="activatelabel" aria-hidden="true">
                                                     <div class="modal-header">
                                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                                                         <h3 id="myModalLabel">Activar tu Cuenta</h3>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <div class="alert fade in alert-warning" id="activoError">
-                                                            <button type="button" class="close" id="activoErrorClose">&times;</button>
-                                                            <strong>Error!</strong>&nbsp;<span id="activoErrorText">Error de jquery</span>
+                                                        <div class="alert fade in alert-warning" id="ActivateError">
+                                                            <button type="button" class="close" id="ActivateErrorClose">&times;</button>
+                                                            <strong>Error!</strong>&nbsp;<span id="ActivateErrorText">Error de jquery</span>
                                                         </div>
-                                                        <div class="alert fade in alert-success" id="successActivo">
-                                                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                        <div class="alert fade in alert-success" id="ActivateSuccess">
+                                                            <button type="button" class="close" id="ActivateSuccessClose">&times;</button>
                                                             <h4>Exito!</h4>
                                                             Se ha activado su cuenta exitosamente, puede iniciar sesion!
                                                         </div>
                                                         <p>Cuando te registraste se envio un codigo a tu correo, por favor introduce aqui tu codigo y presiona activar para poder utilizar tu cuenta de redpoint.</p>
-                                                        <form class="form-horizontal" id="activoForm" action="#">
+                                                        <form class="form-horizontal" id="ActivateFormForm" action="#">
                                                             <div class="control-group">
                                                                 <label class="control-label" for="cda">Codigo de Activacion</label>
                                                                 <div class="controls">
-                                                                    <input type="text" id="cda" name="cda" placeholder="Codigo de Activacion">
+                                                                    <input type="text" id="cda" name="inputcda" placeholder="Codigo de Activacion">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <div class="controls">
-                                                                    <button type="button" class="btn" id="submitH">Activar</button>
+                                                                    <button type="button" class="btn" id="ActivateFormSubmit">Activar</button>
                                                                 </div>
                                                             </div>
                                                         </form>
+                                                        <div class="alert fade in alert-info" id="ActivateLoading">
+                                                            <center><strong>Espera!</strong> Estamos revisando esta  info...</center>
+                                                        </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        &iquest;Ya activaste tu cuenta?&nbsp;<a href="#loginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a>
+                                                        &iquest;Ya activaste tu cuenta?&nbsp;<a href="#LoginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a>
                                                     </div>
                                                 </div>
                                                 <!-- recuperar cuenta step 1-->
-                                                <div id="recover1Form" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="recover1label" aria-hidden="true">
+                                                <div id="Forgot01Form" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="recover1label" aria-hidden="true">
                                                     <div class="modal-header">
                                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                                                         <h3 id="myModalLabel">Recuperar tu Cuenta</h3>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <div class="alert fade in alert-warning" id="recupera1Error">
-                                                            <button type="button" class="close" id="recupera1ErrorClose">&times;</button>
-                                                            <strong>Error!</strong>&nbsp;<span id="recupera1ErrorText">Error de jquery</span>
+                                                        <div class="alert fade in alert-warning" id="Forgot01Error">
+                                                            <button type="button" class="close" id="Forgot01ErrorClose">&times;</button>
+                                                            <strong>Error!</strong>&nbsp;<span id="Forgot01ErrorText">Error de jquery</span>
                                                         </div>
-                                                        <div class="alert fade in alert-success" id="successRecupera1">
+                                                        <div class="alert fade in alert-success" id="Forgot01Success">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <h4>Exito!</h4>
                                                             Se ha enviado un correo a tu cuenta, puedes pasar al siguiente paso.
                                                         </div>
                                                         <p>Introduce tu email, te enviaremos un codigo de verificacion y luego podras cambiar tu contrase&ntilde;a, si ya tienes tu codigo utiliza el siguiente paso.</p>
-                                                        <form class="form-horizontal" id="recupera1Form" action="#">
+                                                        <form class="form-horizontal" id="Forgot01FormForm" action="#">
                                                             <div class="control-group">
                                                                 <label class="control-label" for="emails">Email</label>
                                                                 <div class="controls">
-                                                                    <input type="text" id="emails" name="emails" placeholder="Email">
+                                                                    <input type="text" id="emails" name="inputemails" placeholder="Email">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <div class="controls">
-                                                                    <button type="button" class="btn" id="submit">Enviar Email</button>
+                                                                    <button type="button" class="btn" id="Forgot01FormSubmit">Enviar Email</button>
                                                                 </div>
                                                             </div>
                                                         </form>
+                                                        <div class="alert fade in alert-info" id="Forgot01Loading">
+                                                            <center><strong>Espera!</strong> Estamos revisando esta  info...</center>
+                                                        </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        &iquest;Te recordaste de tu contrase&ntilde;a?&nbsp;<a href="#loginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a> <a href="#recover2Form" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Paso 2</a> 
+                                                        &iquest;Te recordaste de tu contrase&ntilde;a?&nbsp;<a href="#LoginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a> <a href="#Forgot02Form" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Paso 2</a> 
                                                     </div>
                                                 </div>
                                                 <!-- recuperar cuenta step 2-->
-                                                <div id="recover2Form" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="recover2label" aria-hidden="true">
+                                                <div id="Forgot02Form" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="recover2label" aria-hidden="true">
                                                     <div class="modal-header">
                                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                                                         <h3 id="myModalLabel">Paso 2: Cambia tu contrase&ntilde;a</h3>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <div class="alert fade in alert-warning" id="recupera2Error">
-                                                            <button type="button" class="close" id="recupera2ErrorClose">&times;</button>
-                                                            <strong>Error!</strong>&nbsp;<span id="recupera2ErrorText">Error de jquery</span>
+                                                        <div class="alert fade in alert-warning" id="Forgot02Error">
+                                                            <button type="button" class="close" id="Forgot02ErrorClose">&times;</button>
+                                                            <strong>Error!</strong>&nbsp;<span id="Forgot02ErrorText">Error de jquery</span>
                                                         </div>
-                                                        <div class="alert fade in alert-success" id="successRecupera2">
+                                                        <div class="alert fade in alert-success" id="Forgot02Success">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <h4>Exito!</h4>
                                                             Se ha activado cambiado la contrase&ntilde;a de tu cuenta, ahora puedes iniciar sesion!
                                                         </div>
                                                         <p>Ingresa tu nueva contrase&ntilde;a y luego el codigo de verificacion del paso anterior, si no tienes el codigo puedes regresar al paso anterior.</p>
-                                                        <form class="form-horizontal" id="recupera2Form" action="#">
+                                                        <form class="form-horizontal" id="Forgot02FormForm" action="#">
                                                             <div class="control-group">
                                                                 <label class="control-label" for="pw1">Contrase&ntilde;a</label>
                                                                 <div class="controls">
-                                                                    <input type="password" id="pw1" name="pw1" placeholder="Contrase&ntilde;a">
+                                                                    <input type="password" id="pw1" name="inputpw1" placeholder="Contrase&ntilde;a">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <label class="control-label" for="pw2">Verifica tu Contrase&ntilde;a</label>
                                                                 <div class="controls">
-                                                                    <input type="password" id="pw2" name="pw2" placeholder="Contrase&ntilde;a">
+                                                                    <input type="password" id="pw2" name="inputpw2" placeholder="Contrase&ntilde;a">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <label class="control-label" for="pwcode">Codigo de Verificacion</label>
                                                                 <div class="controls">
-                                                                    <input type="text" id="pwcode" name="pwcode" placeholder="Codigo de Verificacion">
+                                                                    <input type="text" id="pwcode" name="inputpwcode" placeholder="Codigo de Verificacion">
                                                                 </div>
                                                             </div>
                                                             <div class="control-group">
                                                                 <div class="controls">
-                                                                    <button type="button" class="btn" id="submitCC">Cambiar Contrase&ntilde;a</button>
+                                                                    <button type="button" class="btn" id="Forgot02FormSubmit">Cambiar Contrase&ntilde;a</button>
                                                                 </div>
                                                             </div>
                                                         </form>
+                                                        <div class="alert fade in alert-info" id="Forgot02Loading">
+                                                            <center><strong>Espera!</strong> Estamos revisando esta  info...</center>
+                                                        </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        &iquest;Ya terminaste?&nbsp;<a href="#loginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a><a href="#recover1Form" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Paso 1</a> 
+                                                        &iquest;Ya terminaste?&nbsp;<a href="#LoginForm" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Inicia Sesion</a><a href="#Forgot01Form" class="btn btn-info" data-toggle="modal" data-dismiss="modal" aria-hidden="true">Paso 1</a> 
                                                     </div>
                                                 </div>
                                                 <!--- interfaz para agregar puntos -->
@@ -370,43 +394,9 @@ session_start();
                                                                             </tr>
                                                                             <tr><td><label>Tipo de Suceso:</label></td><td>
                                                                                     <select name="idTipoPunto" id="idTipoPunto">
-                                                                                        <?php
-                                                                                        $con = mysql_connect($host, $username, $password);
-                                                                                        if ($con) {
-                                                                                            mysql_select_db($database, $con);
-                                                                                            $rs = mysql_query("SELECT id,descripcion FROM tipo_punto", $con) or die(mysql_error());
-                                                                                            $rown = 0;
-                                                                                            while ($row = mysql_fetch_array($rs)) {
-                                                                                                if ($rown == 0) {
-                                                                                                    $texto = "<option value=\"" . $row['id'] . "\">" . $row['descripcion'] . "</option>";
-                                                                                                } else {
-                                                                                                    $texto = $texto . "<option value=\"" . $row['id'] . "\">" . $row['descripcion'] . "</option>";
-                                                                                                }
-                                                                                                $rown++;
-                                                                                            }
-                                                                                            echo($texto);
-                                                                                        }
-                                                                                        mysql_close($con);
-                                                                                        ?>
+
                                                                                     </select></td></tr>
-                                                                            <?php
-                                                                            $con = mysql_connect($host, $username, $password);
-                                                                            if ($con) {
-                                                                                mysql_select_db($database, $con);
-                                                                                $rs = mysql_query("SELECT id,nombre FROM objeto", $con);
-                                                                                $rown = 0;
-                                                                                while ($row = mysql_fetch_array($rs)) {
-                                                                                    if ($rown == 0) {
-                                                                                        $texto = "<tr><td><label>" . $row['nombre'] . "</label></td><td><input type=\"checkbox\" name=\"c" . $row['id'] . "\" id=\"c" . $row['id'] . "\"></td></tr>";
-                                                                                    } else {
-                                                                                        $texto = $texto . "<tr><td><label>" . $row['nombre'] . "</label></td><td><input type=\"checkbox\" name=\"c" . $row['id'] . "\" id=\"c" . $row['id'] . "\"></td></tr>";
-                                                                                    }
-                                                                                    $rown++;
-                                                                                }
-                                                                                echo($texto);
-                                                                            }
-                                                                            mysql_close($con);
-                                                                            ?>
+
                                                                             <tr><td colspan="2"><h4>Comentario:</h4></td></tr>
                                                                             <tr><td colspan="2"><textarea cols="100" rows="3" name="comentario" style="margin: 0px 0px 10px; width: 368px; height: 50px;" id="comentariopunto"></textarea></td></tr>
                                                                             <tr><td colspan="2"><center><input type="button" class="btn btn-primary btn-block" value="Crear Punto" id="submitD"></center></td></tr>
@@ -425,10 +415,10 @@ session_start();
                                                                             <div class="accordion-group">
                                                                                 <div class="accordion-heading">
                                                                                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne" style="text-decoration:none"><?php
-                                                                            if (isset($_SESSION['correo'])) {
-                                                                                echo (trim($_SESSION['correo']));
-                                                                            } else {
-                                                                                ?>Usuario Anonimo<?php } ?></a>
+                                                    if (isset($_SESSION['correo'])) {
+                                                        echo (trim($_SESSION['correo']));
+                                                    } else {
+                                                        ?>Usuario Anonimo<?php } ?></a>
                                                                                 </div>
                                                                                 <div id="collapseOne" class="accordion-body collapse in">
                                                                                     <div class="accordion-inner">
@@ -478,10 +468,11 @@ session_start();
                                                                                                         <script src="js/bootstrap-collapse.js"></script>
                                                                                                         <script src="js/bootstrap-carousel.js"></script>
                                                                                                         <script src="js/bootstrap-typeahead.js"></script>
-                                                                                                        <script src="assets/js/bootstrap-affix.js"></script>
+                                                                                                        <script src="js/bootstrap-affix.js"></script>
                                                                                                         <script src="js/holder/holder.js"></script>
                                                                                                         <script src="js/google-code-prettify/prettify.js"></script>
                                                                                                         <script src="js/application.js"></script>
+                                                                                                        <script src="js/redpoint-prevfunctions.js"></script>
                                                                                                         <script>
                                                                                                             function share(red){
                                                                                                                 if(red=="fb"){
@@ -506,11 +497,7 @@ session_start();
                                                                                                                 $('#agregarPunto').modal('show');
                                                                                                             }
                                                                                                         </script>
-                                                                                                        <script type="text/javascript" src="js/registro.js"></script>
-                                                                                                        <script type="text/javascript" src="js/login.js"></script>
-                                                                                                        <script type="text/javascript" src="js/activar.js"></script>
-                                                                                                        <script type="text/javascript" src="js/recuperar.js"></script>
-                                                                                                        <script type="text/javascript" src="js/agregapunto.js"></script>
+
                                                                                                         <img src="img/softso.png" style="position:absolute; bottom:20px; right:10px"/>
                                                                                                         </body>
                                                                                                         </html>
