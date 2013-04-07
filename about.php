@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link href="css/impress.css" rel="stylesheet" />
 <title>Acerca de Redpoint</title>
-<link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
 </head>
 <?php
 if(isset($_GET['jumpto'])){
@@ -53,10 +53,10 @@ Your browser does not support the audio element.
     </div>
   <div id="its-in-3d" class="step" data-x="6200" data-y="4300" data-z="-100" data-rotate-x="-40" data-rotate-y="10" data-scale="2">
     <p><span class="have">Ayudanos</span> <span class="you">a</span> <span class="noticed">compartir</span> <span class="its">nuestra</span> <span class="in">idea</span></p>
-        <span class="footnote"><img src="images/facebook.png" width="64" height="64" /> <img src="images/twitter.png" width="64" height="64" /> <img src="images/googleplus.png" height="64" width="64"/></span>
+        <span class="footnote"><img src="img/facebook.png" width="64" height="64" /> <img src="img/twitter.png" width="64" height="64" /> <img src="img/googleplus.png" height="64" width="64"/></span>
     </div> 
     <div id="fin" class="step" data-x="6500" data-y="5300" data-scale="2"><center>
-        <img src="images/redpointlogo.fw.png"  height="64" width="64"/> <img src="images/letterslogo.fw.png" width="190" height="45"/>
+        <img src="img/redpointlogo.fw.png"  height="64" width="64"/> <img src="img/letterslogo.fw.png" width="190" height="45"/>
         <p style="font-size:20px">Crowdsourcing helpful maps</p>
     </center></div>
 </div>
